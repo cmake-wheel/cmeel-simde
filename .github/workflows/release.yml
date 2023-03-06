@@ -1,0 +1,38 @@
+name: Release on GitHub & PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build_wheels:
+    name: Build wheel
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - run: python -m pip install -U pip
+      - run: python -m pip wheel -w wh .
+      - uses: actions/upload-artifact@v3
+        with:
+          path: wh
+  release:
+    needs: ["build_wheels"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - uses: actions/download-artifact@v3
+      - run: python -m pip install twine
+      - run: python -m twine upload -u __token__ -p "${{ secrets.PYPI_TOKEN }}" artifact/*
+      - run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - run: gh release create -t "Release ${{ env.TAG}}" "${{ env.TAG }}" artifact/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
