@@ -13,6 +13,7 @@ repository = "https://github.com/cmake-wheel/cmeel-simde.git"
 [tool.cmeel]
 any = true
 run-tests = false
+build-number = 1
 
 [build-system]
 requires = ["cmeel[build]"]
