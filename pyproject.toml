@@ -15,7 +15,7 @@ repository = "https://github.com/cmake-wheel/cmeel-simde.git"
 
 [tool.cmeel]
 any = true
-build-number = 1
+build-number = 2
 run-tests = false
 
 [tool.tomlsort]
