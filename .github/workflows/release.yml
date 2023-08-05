@@ -30,12 +30,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
       - uses: actions/download-artifact@v3
-      - run: python -m pip install twine
-      - run: python -m twine upload -u __token__ -p "${{ secrets.PYPI_TOKEN }}" artifact/cmeel_simde*
+      - run: pipx install twine
+      - run: twine upload -u __token__ -p "${{ secrets.PYPI_TOKEN }}" artifact/cmeel_simde*
       - run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
       - run: gh release create -t "Release ${{ env.TAG}}" "${{ env.TAG }}" artifact/cmeel_simde*
         env:
