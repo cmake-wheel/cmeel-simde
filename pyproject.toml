@@ -14,8 +14,9 @@ homepage = "https://github.com/cmake-wheel/cmeel-simde"
 repository = "https://github.com/cmake-wheel/cmeel-simde.git"
 
 [tool.cmeel]
-any = true
 build-number = 2
+has-binaries = false
+has-sitelib = false
 run-tests = false
 
 [tool.tomlsort]
