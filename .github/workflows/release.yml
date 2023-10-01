@@ -13,7 +13,7 @@ jobs:
     name: Build wheel
     runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'true'
       - uses: actions/setup-python@v4
@@ -29,7 +29,7 @@ jobs:
     needs: ["build_wheels"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v3
       - run: pipx install twine
       - run: twine upload -u __token__ -p "${{ secrets.PYPI_TOKEN }}" artifact/cmeel_simde*
