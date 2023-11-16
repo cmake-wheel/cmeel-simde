@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(simde_VERSION 0.7.2)
+set(NAME simde)
+set(VERSION 0.7.6)
 
-project(cmeel-simde VERSION ${simde_VERSION})
+project("cmeel-${NAME}" VERSION ${VERSION})
 
 include(FetchContent)
 FetchContent_Declare(
-  simde
-  URL "https://github.com/simd-everywhere/simde/archive/refs/tags/v${simde_VERSION}.tar.gz"
-  URL_HASH SHA1=81e248cf45b38d2bbb8506d78803b569fb3c33bb
+  ${NAME}
+  URL "https://github.com/simd-everywhere/${NAME}/archive/refs/tags/v${VERSION}.tar.gz"
+  URL_HASH "SHA1=c24aa2d6581096583eebc8434668e75ca05d0262"
   DOWNLOAD_EXTRACT_TIMESTAMP
   OFF
   CONFIGURE_COMMAND
@@ -17,5 +18,5 @@ FetchContent_Declare(
   ""
   INSTALL_COMMAND
   "")
-FetchContent_MakeAvailable(simde)
-install(DIRECTORY "${simde_SOURCE_DIR}/simde" DESTINATION include)
+FetchContent_MakeAvailable(${NAME})
+install(DIRECTORY "${${NAME}_SOURCE_DIR}/${NAME}" DESTINATION include)
