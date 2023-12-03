@@ -12,6 +12,7 @@ version = "0.7.6"
 [project.urls]
 homepage = "https://github.com/cmake-wheel/cmeel-simde"
 repository = "https://github.com/cmake-wheel/cmeel-simde.git"
+upstream = "https://github.com/simd-everywhere/simde"
 
 [tool.cmeel]
 has-binaries = false
