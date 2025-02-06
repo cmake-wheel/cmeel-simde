@@ -7,7 +7,7 @@ description = "cmeel distribution for simde"
 license = "BSD-2-Clause"
 name = "cmeel-simde"
 requires-python = ">= 3.8"
-version = "0.7.6"
+version = "0.8.2"
 
 [project.urls]
 homepage = "https://github.com/cmake-wheel/cmeel-simde"
