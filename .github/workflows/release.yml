@@ -6,7 +6,7 @@ on:
       - "v*"
     branches:
       - main
-  pull_request_target:
+  pull_request:
     branches:
       - main
 
@@ -15,29 +15,63 @@ env:
 
 jobs:
   wheel:
-    runs-on: "ubuntu-latest"
+    name: "Build ${{ matrix.python }} ${{ matrix.os }}"
+    runs-on: "${{ matrix.os }}"
+    strategy:
+      matrix:
+        os: ["ubuntu-24.04"]
+        python: ["cp313"]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
+      - run: echo "${{ matrix.python }}" | sed "s/cp3/PYTHON_VERSION=3./" >> "${GITHUB_ENV}"
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ env.PYTHON_VERSION }}
       - run: python -m pip install -U pip
-      - run: python -m pip wheel -vw wh .
+      - run: python -m pip wheel -vw wheelhouse .
       - uses: actions/upload-artifact@v4
         with:
-          path: wh
+          name: "artifact-${{ matrix.os }}-${{ matrix.python }}"
+          path: wheelhouse
+
+  test:
+    needs: ["wheel"]
+    name: "Test ${{ matrix.python }} ${{ matrix.os }}"
+    runs-on: "${{ matrix.os }}"
+    strategy:
+      matrix:
+        os: ["ubuntu-24.04"]
+        python: ["cp313"]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: "artifact-${{ matrix.os }}-${{ matrix.python }}"
+          path: wheelhouse
+      - run: echo "${{ matrix.python }}" | sed "s/cp3/PYTHON_VERSION=3./" >> "${GITHUB_ENV}"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: index
+        run: |
+          python -m pip install -U pip
+          python -m pip install wheel simple503
+          python -m simple503 --base-url ${{ github.workspace }}/wheelhouse ${{ github.workspace }}/wheelhouse
+      - name: install deps
+        run: python -m pip install cmeel
+      - name: install wheel
+        run: python -m pip install -i "file://${{ github.workspace }}/wheelhouse" cmeel-simde
 
   sdist:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: 3.13
       - name: setup
         run: |
           python -m pip install -U pip
@@ -46,12 +80,17 @@ jobs:
         run: python -m build -nso dist .
       - uses: actions/upload-artifact@v4
         with:
+          name: artifact-sdist
           path: dist
 
   release:
-    needs: ["wheel", "sdist"]
+    needs: ["test", "sdist"]
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      id-token: write
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -62,10 +101,14 @@ jobs:
           git verify-tag --raw ${{ github.ref_name }} 2>&1
           | grep -q 'VALIDSIG 9B1A79065D2F2B806C8A5A1C7D2ACDAF4653CF28'
       - uses: actions/download-artifact@v4
-      - run: pipx install twine
-      - run: twine upload -u __token__ -p "${{ secrets.PYPI_TOKEN }}" artifact/cmeel_simde*.whl
-      - run: twine upload -u __token__ -p "${{ secrets.PYPI_TOKEN }}" artifact/cmeel_simde*.tar.gz || true
+        with:
+          merge-multiple: true
+          path: dist
       - run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-      - run: gh release create -t "Release ${{ env.TAG}}" "${{ env.TAG }}" artifact/cmeel_simde*.{whl,tar.gz}
+      - run: gh release create -t "Release ${{ env.TAG}}" "${{ env.TAG }}" dist/cmeel_simde*.{whl,tar.gz}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
